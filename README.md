@@ -232,6 +232,10 @@ gcc driver.c -o driver
 gcc paddock.c -o paddock
 ```
 
+Dokumentasi pengerjaan
+<img width="1080" alt="image" src="https://github.com/salschoco27/Sisop-3-2024-MH-IT28/assets/151063684/93292b2b-c476-47ec-9d7b-3fe32c967bb3">
+
+
 
 ## Soal 4
 download file csv terlebih dahulu
