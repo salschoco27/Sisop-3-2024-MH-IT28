@@ -223,4 +223,17 @@ int main() {
     return 0;
 }
 ```
+
+
+Setelah itu menjalankan command
+
+```
+gcc driver.c -o driver
+gcc paddock.c -o paddock
+```
+
+
 ## Soal 4
+download file csv terlebih dahulu
+
+```export fileid=10p_kzuOgaFY3WT6FVPJIXFbkej2s9f50 && export filename=myanimelist.csv && wget -O $filename 'https://docs.google.com/uc?export=download&id='$fileid```
