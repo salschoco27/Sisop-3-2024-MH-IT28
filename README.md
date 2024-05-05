@@ -5,6 +5,7 @@ Kelompok IT 28:
 - I Dewa Made Satya Raditya (5027271051)
 ## Soal 1
 ## Soal 2
+### dudududu.c
 ## Soal 3
 ### actions.c
 ```c
