@@ -4,6 +4,58 @@ Kelompok IT 28:
 - Fadlillah Cantika Sari H (5027271042)
 - I Dewa Made Satya Raditya (5027271051)
 ## Soal 1
+Buat direktori baru untuk mengerjakan soal ini dengan perintah:
+```
+mkdir soal-shift-modul-3
+cd soal-shift-modul-3
+```
+Buat file-file C yang diperlukan dengan perintah:
+```
+touch auth.c rate.c db.c
+```
+Buat direktori microservices dan new-data dengan perintah:
+```
+mkdir microservices
+mkdir database
+mkdir new-data
+```
+Di dalam direktori new-data, buat beberapa file CSV sesuai dengan soal, belobog_trashcan.csv, osaka_parkinglot.csv, dan ikn.csv.
+
+Buka file auth.c 
+```
+nano auth.c
+```
+Tulis kodenya untuk mengecek setiap file di direktori new-data. Jika file bukan CSV dengan akhiran _trashcan.csv atau _parkinglot.csv, maka hapus file tersebut.
+
+Untuk file yang valid, lakukan proses selanjutnya (bagian b dan c pada soal).
+
+Buka file rate.c 
+```
+nano rate.c
+```
+Buka file db.c 
+```
+nano db.c
+```
+Tulis kode untuk memindahkan file yang valid dari new-data ke microservices/database menggunakan shared memory.
+
+Buat file log db.log di dalam direktori microservices/database.
+
+Log setiap file yang dipindahkan ke db.log 
+
+Kompilasi file-file C dengan perintah:
+```
+gcc -o auth auth.c
+gcc -o rate rate.c
+gcc -o db db.c
+```
+Jalankan masing masing program dengan perintah:
+```
+./auth
+./rate
+./db
+```
+
 ## Soal 2
 ### dudududu.c
 ## Soal 3
