@@ -283,6 +283,14 @@ Setelah itu menjalankan command
 gcc driver.c -o driver
 gcc paddock.c -o paddock
 ```
+Command untuk menjalankan program:
+```
+./driver -c _Tire_ -i 51%
+notes: _Tire_  dapat diganti
+TireChange : untuk check pergantian ban
+Fuel : untuk check respon paddock terhadap bensin
+Gap : untuk check respon paddock terhadap jarak antara driver dengan mobil di depannya
+```
 
 Dokumentasi pengerjaan
 <img width="1080" alt="image" src="https://github.com/salschoco27/Sisop-3-2024-MH-IT28/assets/151063684/93292b2b-c476-47ec-9d7b-3fe32c967bb3">
@@ -358,6 +366,7 @@ int main() {
 ```
 
 ### server.c
+```c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -451,3 +460,4 @@ int main() {
     close(server_fd);
     return 0;
 }
+```
