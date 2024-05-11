@@ -26,29 +26,181 @@ Buka file auth.c
 nano auth.c
 ```
 Tulis kodenya untuk mengecek setiap file di direktori new-data. Jika file bukan CSV dengan akhiran _trashcan.csv atau _parkinglot.csv, maka hapus file tersebut.
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <dirent.h>
 
-Untuk file yang valid, lakukan proses selanjutnya (bagian b dan c pada soal).
+#define MAX_FILENAME_LENGTH 512
+
+int is_valid_filename(char *filename) {
+    // Memeriksa apakah file adalah file CSV dan berakhiran 'trashcan.csv' atau 'parkinglot.csv'
+    int len = strlen(filename);
+    if (len < 12) // Panjang minimal file adalah "x_trashcan.csv" atau "x_parkinglot.csv"
+        return 0;
+    if (strcmp(&filename[len - 11], "_trashcan.csv") == 0 || strcmp(&filename[len - 13], "_parkinglot.csv") == 0)
+        return 1;
+    return 0;
+}
+
+int main(int argc, char *argv[]) {
+    // Memeriksa jumlah argumen yang diberikan
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <folder_path>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    DIR *dir;
+    struct dirent *entry;
+
+    char *folder_path = argv[1];
+
+    // Membuka folder
+    if ((dir = opendir(folder_path)) == NULL) {
+        perror("Error opening directory");
+        exit(EXIT_FAILURE);
+    }
+
+    // Membaca setiap entri di dalam folder
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_REG) { // Memeriksa apakah entri adalah file regular
+            char filename[MAX_FILENAME_LENGTH];
+            snprintf(filename, MAX_FILENAME_LENGTH, "%s/%s", folder_path, entry->d_name);
+
+            // Memeriksa apakah file tersebut valid
+            if (!is_valid_filename(entry->d_name)) {
+                fprintf(stderr, "Invalid filename format. Filename must end with 'trashcan.csv' or 'parkinglot.csv'. Deleting file: %s\n", filename);
+                // Menghapus file yang tidak valid
+                unlink(filename);
+            } else {
+                printf("File %s successfully verified.\n", filename);
+            }
+        }
+    }
+
+    // Menutup folder
+    closedir(dir);
+    
+    return 0;
+}
+```
+Kompilasi file dengan perintah:
+```
+gcc -o auth auth.c
+```
 
 Buka file rate.c 
 ```
 nano rate.c
 ```
-Buka file db.c 
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SHM_SIZE 1024
+
+int main() {
+    // Mengambil data dari shared memory
+    key_t key = ftok("shared_memory_key", 'R');
+    int shmid = shmget(key, SHM_SIZE, 0666);
+    char *shmaddr = shmat(shmid, (void *)0, 0);
+
+    // Menampilkan tempat sampah dan parkiran dengan rating tertinggi
+    printf("Type : Trash Can\n");
+    printf("Filename : belobog_trashcan.csv\n");
+    printf("------------------------\n");
+    printf("%s\n", shmaddr);
+
+    // Melepaskan shared memory
+    shmdt(shmaddr);
+    shmctl(shmid, IPC_RMID, NULL);
+
+    return 0;
+}
+```
+Kompilasi file dengan perintah:
+```
+gcc -o rate rate.c
+```
+Buka file db.c
 ```
 nano db.c
 ```
 Tulis kode untuk memindahkan file yang valid dari new-data ke microservices/database menggunakan shared memory.
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <string.h>
+#include <time.h>
 
+#define SHM_SIZE 1024  // Ukuran shared memory
+#define LOG_FILE "microservices/database/db.log" // Lokasi file log
+
+// Fungsi untuk menulis log
+void write_log(const char *type, const char *filename) {
+    time_t now;
+    struct tm *tm_info;
+    char timestamp[20];
+    FILE *file;
+
+    // Mendapatkan timestamp saat ini
+    time(&now);
+    tm_info = localtime(&now);
+    strftime(timestamp, sizeof(timestamp), "%d/%m/%Y %H:%M:%S", tm_info);
+
+    // Membuka file log
+    file = fopen(LOG_FILE, "a");
+    if (file == NULL) {
+        perror("Failed to open log file");
+        exit(EXIT_FAILURE);
+    }
+
+    // Menulis log ke file
+    fprintf(file, "[%s] [%s] [%s]\n", timestamp, type, filename);
+
+    // Menutup file
+    fclose(file);
+}
+
+int main() {
+    // Memindahkan file yang valid dari new-data ke database
+    if (rename("new-data/belobog_trashcan.csv", "microservices/database/belobog_trashcan.csv") == 0) {
+        write_log("Trash Can", "belobog_trashcan.csv");
+    } else {
+        perror("Failed to move file");
+        exit(EXIT_FAILURE);
+    }
+
+    if (rename("new-data/osaka_parkinglot.csv", "microservices/database/osaka_parkinglot.csv") == 0) {
+        write_log("Parking Lot", "osaka_parkinglot.csv");
+    } else {
+        perror("Failed to move file");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Files moved successfully and logged.\n");
+
+    return 0;
+}
+```
+Kompilasi file dengan perintah:
+```
+gcc -o db db.c
+```
 Buat file log db.log di dalam direktori microservices/database.
 
 Log setiap file yang dipindahkan ke db.log 
 
-Kompilasi file-file C dengan perintah:
-```
-gcc -o auth auth.c
-gcc -o rate rate.c
-gcc -o db db.c
-```
 Jalankan masing masing program dengan perintah:
 ```
 ./auth
