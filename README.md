@@ -285,8 +285,8 @@ gcc paddock.c -o paddock
 ```
 Command untuk menjalankan program:
 ```
-./driver -c _Tire_ -i 51%
-notes: _Tire_  dapat diganti
+./driver -c Tire -i 51%
+notes: Tire dapat diganti
 TireChange : untuk check pergantian ban
 Fuel : untuk check respon paddock terhadap bensin
 Gap : untuk check respon paddock terhadap jarak antara driver dengan mobil di depannya
