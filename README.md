@@ -376,7 +376,9 @@ int main(int argc, char *argv[]) {
 #include "actions.c"
 #include <time.h>
 #define PORT 8080
-
+```
+Membuat log file dan ketentuan message log nya
+```c
 void log_message(char* source, char* command, char* additional_info) {
     FILE *fp;
     fp = fopen("race.log", "a+");
@@ -398,7 +400,9 @@ void log_message(char* source, char* command, char* additional_info) {
     fprintf(fp, "[%s] [%s]: [%s] [%s]\n", source, timestamp, command, additional_info);
     fclose(fp);
 }
+```
 
+```c
 void handle_client_request(int client_socket) {
     char buffer[1024] = {0};
     char response[1024] = {0};
