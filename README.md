@@ -244,8 +244,17 @@ void log_history(char *op, char *message) {
     fclose(log_file);
 }
 ```
+**KENDALA:** 
+1. kode tidak menghasilkan output yang diinginkan disaat menggunakan input berupa kalimat (cth: satu, dua, tiga, dst)
+   maupun menggunakan angka (cth: 1, 2, 3, dst).
+   ![image](https://github.com/salschoco27/Sisop-3-2024-MH-IT28/assets/163504787/6a7c4b4c-b5b3-4c0d-85a6-889b20706a59)
+
+   
+2. histori.log tidak mencatat seperti yang diharapkan
+   ![image](https://github.com/salschoco27/Sisop-3-2024-MH-IT28/assets/163504787/52b7132b-fdb1-4b1c-946f-6d49c47055ec)
 
 
+   
 
 ## Soal 3
 ### actions.c
