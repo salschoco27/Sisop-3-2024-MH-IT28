@@ -58,6 +58,195 @@ Jalankan masing masing program dengan perintah:
 
 ## Soal 2
 ### dudududu.c
+
+1. import library yang diperlukan
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#define MAX_LEN 100
+```
+2. Definisikan fungsi yg akan dipakai
+
+```
+void operasi(char *op, int num1, int num2, int pipe_fd[]); //detailnya dibawah//
+void ubah_kata(int pipe_fd[], char *op); //detailnya dibawah//
+void log_history(char *op, char *message); //detailnya dibawah//
+```
+
+
+3. `int main()`, parent & child process
+   * `int main()` membuat dua pipe `pipe1` dan `pipe2`  untuk hubungan             antara  parent process dan child process, Meminta input dua bilangan         dari pengguna, Melakukan `fork()` untuk membuat child process.
+   * parent process:
+     Menutup ujung pipa yang tidak digunakan `(pipe1 baca, pipe2 tulis)`,         Jika ada argumen baris perintah `(operasi)` maka akan Memanggil fungsi 
+     `operasi()` dengan argumen operasi, dua bilangan input, dan pipe2.
+   * child process: 
+     Menutup ujung pipa yang tidak digunakan `(pipe1 write, pipe2 read)`,         Memanggil fungsi `ubah_kata()` dengan argumen pipe1 dan operasi dari         argumen baris perintah `(argv[1])`, lalu Menutup ujung pipa yang masih 
+     terbuka `(pipe1 baca, pipe2 tulis)`.
+
+```
+int main(int argc, char *argv[]) {
+    int pipe1[2], pipe2[2];
+    pid_t pid;
+
+    if (pipe(pipe1) == -1 || pipe(pipe2) == -1) {
+        perror("Pipe failed");
+        exit(EXIT_FAILURE);
+    }
+
+    char num1[MAX_LEN], num2[MAX_LEN];
+    printf("Masukkan dua angka: ");
+    scanf("%s %s", num1, num2);
+
+    pid = fork();
+
+    if (pid == -1) {
+        perror("Fork failed");
+        exit(EXIT_FAILURE);
+    } else if (pid == 0) {
+        // Child 
+        close(pipe1[1]);  // Tutup pipe1 untuk menulis
+        close(pipe2[0]);  // Tutup pipe2 untuk membaca
+
+        ubah_kata(pipe1, argv[1]);
+
+        close(pipe1[0]);
+        close(pipe2[1]);
+        exit(EXIT_SUCCESS);
+    } else {
+        // Parent 
+        close(pipe1[0]);  // Tutup pipe1 untuk membaca
+        close(pipe2[1]);  // Tutup pipe2 untuk menulis
+
+        if (argc > 1) {
+            operasi(argv[1], atoi(num1), atoi(num2), pipe2);
+        } else {
+            printf("Penggunaan: %s <operasi>\n", argv[0]);
+            printf("Operasi yang tersedia: -kali, -tambah, -kurang, -bagi\n");
+            exit(EXIT_FAILURE);
+        }
+
+        close(pipe1[1]);
+        close(pipe2[0]);
+        wait(NULL);
+    }
+
+    return 0;
+}
+```
+4. Fungsi `operasi()`: 
+   bertugas melakukan operasi yang diminta soal seperti         
+   perkalian, penjumlahan, pengurangan, atau pembagian terhadap dua bilangan 
+   bulat yang diberikan.
+   
+```
+void operasi(char *op, int num1, int num2, int pipe_fd[]) {
+    int hasil;
+    char message[MAX_LEN];
+
+    if (strcmp(op, "-kali") == 0) {
+        hasil = num1 * num2;
+        sprintf(message, "%d", hasil);
+        write(pipe_fd[1], message, strlen(message) + 1);
+    } else if (strcmp(op, "-tambah") == 0) {
+        hasil = num1 + num2;
+        sprintf(message, "%d", hasil);
+        write(pipe_fd[1], message, strlen(message) + 1);
+    } else if (strcmp(op, "-kurang") == 0) {
+        hasil = num1 - num2;
+        if (hasil < 0) {
+            strcpy(message, "ERROR");
+        } else {
+            sprintf(message, "%d", hasil);
+        }
+        write(pipe_fd[1], message, strlen(message) + 1);
+    } else if (strcmp(op, "-bagi") == 0) {
+        if (num2 == 0) {
+            strcpy(message, "ERROR");
+        } else {
+            hasil = num1 / num2;
+            sprintf(message, "%d", hasil);
+        }
+        write(pipe_fd[1], message, strlen(message) + 1);
+    } else {
+        printf("Operasi tidak valid\n");
+        exit(EXIT_FAILURE);
+    }
+}
+```
+5. Fungsi `ubah_kata()`:
+   mengubah hasil operasi matematika menjadi kalimat deskriptif, fungsi ini     akan memanggil fungsi `log_history()` untuk mencatat operasi yang 
+   dilakukan beserta kalimat deskriptifnya ke dalam file log.
+```
+void ubah_kata(int pipe_fd[], char *op) {
+    char hasil[MAX_LEN];
+    char message[MAX_LEN];
+    read(pipe_fd[0], hasil, MAX_LEN);
+
+    if (strcmp(hasil, "ERROR") == 0) {
+        sprintf(message, "ERROR pada %s.", op + 1);
+    } else {
+        int num = atoi(hasil);
+        char kata[MAX_LEN];
+        sprintf(kata, "%d", num);
+
+        if (strcmp(op, "-kali") == 0) {
+            sprintf(message, "hasil perkalian %s adalah %s.", hasil, kata);
+        } else if (strcmp(op, "-tambah") == 0) {
+            sprintf(message, "hasil penjumlahan %s adalah %s.", hasil, kata);
+        } else if (strcmp(op, "-kurang") == 0) {
+            sprintf(message, "hasil pengurangan %s adalah %s.", hasil, kata);
+        } else if (strcmp(op, "-bagi") == 0) {
+            sprintf(message, "hasil pembagian %s adalah %s.", hasil, kata);
+        }
+    }
+
+    write(pipe_fd[1], message, strlen(message) + 1);
+    log_history(op, message);
+}
+```
+6. Fungsi `log_history()`:
+   Fungsi ini bertugas mencatat informasi hasil fungsi `operasi()` 
+   yang diteruskan ke `ubah_kata` yang selanjutnya dicatat ke dalam file log.
+```
+void log_history(char *op, char *message) {
+    FILE *log_file = fopen("histori.log", "a");
+    if (log_file == NULL) {
+        perror("Gagal membuka file log");
+        exit(EXIT_FAILURE);
+    }
+
+    time_t rawtime;
+    struct tm *timeinfo;
+    char date_str[MAX_LEN];
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+    strftime(date_str, MAX_LEN, "%d/%m/%y %H:%M:%S", timeinfo);
+
+    char type[MAX_LEN];
+    if (strcmp(op, "-kali") == 0) {
+        strcpy(type, "KALI");
+    } else if (strcmp(op, "-tambah") == 0) {
+        strcpy(type, "TAMBAH");
+    } else if (strcmp(op, "-kurang") == 0) {
+        strcpy(type, "KURANG");
+    } else if (strcmp(op, "-bagi") == 0) {
+        strcpy(type, "BAGI");
+    }
+
+    fprintf(log_file, "[%s] [%s] %s\n", date_str, type, message);
+    fclose(log_file);
+}
+```
+
+
+
 ## Soal 3
 ### actions.c
 ```c
